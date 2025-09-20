@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Kaif - AI Health Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+        #chat-container::-webkit-scrollbar, #chat-history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #chat-container::-webkit-scrollbar-track, #chat-history-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #chat-container::-webkit-scrollbar-thumb, #chat-history-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .dark #chat-container::-webkit-scrollbar-thumb, .dark #chat-history-list::-webkit-scrollbar-thumb {
+             background: #475569;
+        }
+        .ai-message .typing-dot {
+            animation: typing-blink 1.4s infinite both;
+        }
+        .ai-message .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .ai-message .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes typing-blink {
+            0% { opacity: 0.2; }
+            20% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+        /* Landing page animations */
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .blob {
+            animation: pulse 10s infinite alternate;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+        /* Sidebar Peek/Collapse */
+        #chat-sidebar.is-collapsed {
+            width: 4.5rem; /* w-18 */
+        }
+        #chat-sidebar.is-collapsed .sidebar-text {
+            display: none;
+        }
+        #chat-sidebar.is-collapsed .sidebar-button {
+            justify-content: center;
+        }
+        /* Animation for page transitions */
+        @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .fade-out { animation: fade-out 0.3s ease-in-out forwards; }
+        .fade-in { animation: fade-in 0.3s ease-in-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+
+    <!-- Landing Page -->
+    <div id="landing-page">
+        <!-- Header -->
+        <nav class="bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 flex items-center space-x-2">
+                             <svg class="h-8 w-8 text-sky-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                             <span class="font-bold text-xl text-slate-800 dark:text-white">Dr. Kaif</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                         <button id="launch-app-btn-nav" class="bg-sky-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-sky-600 transition-all shadow-sm">Launch Assistant</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <main class="relative bg-slate-50 dark:bg-slate-900 overflow-hidden">
+             <!-- Background Blobs -->
+            <div class="absolute top-0 left-0 w-full h-full z-0">
+                <div class="absolute top-1/4 -left-64 w-[500px] h-[500px] bg-sky-200 dark:bg-sky-900/50 rounded-full opacity-50 blur-3xl blob"></div>
+                <div class="absolute -bottom-64 right-0 w-[500px] h-[500px] bg-indigo-200 dark:bg-indigo-900/50 rounded-full opacity-50 blur-3xl blob" style="animation-delay: 2s;"></div>
+            </div>
+            <div class="relative px-6 lg:px-8 z-10">
+                <div class="mx-auto max-w-4xl pt-20 pb-32 sm:pt-48 sm:pb-40">
+                    <div class="text-center">
+                        <h1 class="text-4xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-6xl">Dr. Kaif Your Personal AI Health Assistant</h1>
+                        <p class="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">Get instant answers to your health questions. Analyze reports, understand symptoms, and get reliable information, 24/7.</p>
+                        <div class="mt-10 flex items-center justify-center gap-x-6">
+                            <button id="launch-app-btn-hero" class="group relative rounded-md bg-sky-500 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 transition-all">
+                                <span class="absolute inset-0 bg-white/10 dark:bg-white/5 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-500"></span>
+                                <span class="relative">Get Started Now</span>
+                            </button>
+                            <a href="#features" class="text-sm font-semibold leading-6 text-slate-900 dark:text-white group">
+                                Learn More <span class="transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- "How it Works" Section -->
+        <section id="how-it-works" class="py-24 sm:py-32 bg-white dark:bg-slate-900/50 fade-in-section">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="mx-auto max-w-2xl lg:text-center">
+                     <h2 class="text-base font-semibold leading-7 text-sky-600 dark:text-sky-400">Three Easy Steps</h2>
+                    <p class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">How to Use the Assistant</p>
+                </div>
+                <div class="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 text-center sm:grid-cols-3 sm:gap-4 lg:max-w-none">
+                    <div class="flex flex-col items-center">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900 text-sky-600 dark:text-sky-400 ring-8 ring-sky-50 dark:ring-sky-900/50 font-bold text-lg">1</div>
+                        <h3 class="mt-6 text-lg font-semibold text-slate-900 dark:text-white">Ask a Question</h3>
+                        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Describe your symptoms, medications, or any health condition.</p>
+                    </div>
+                    <div class="hidden sm:block self-center text-slate-300 dark:text-slate-600 font-mono text-xl" aria-hidden="true">→</div>
+                    <div class="flex flex-col items-center">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900 text-sky-600 dark:text-sky-400 ring-8 ring-sky-50 dark:ring-sky-900/50 font-bold text-lg">2</div>
+                        <h3 class="mt-6 text-lg font-semibold text-slate-900 dark:text-white">Upload an Image (Optional)</h3>
+                        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Upload medical reports or photos for a better analysis.</p>
+                    </div>
+                    <div class="hidden sm:block self-center text-slate-300 dark:text-slate-600 font-mono text-xl" aria-hidden="true">→</div>
+                    <div class="flex flex-col items-center">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900 text-sky-600 dark:text-sky-400 ring-8 ring-sky-50 dark:ring-sky-900/50 font-bold text-lg">3</div>
+                        <h3 class="mt-6 text-lg font-semibold text-slate-900 dark:text-white">Get AI Analysis</h3>
+                        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Receive instant and reliable information from the AI.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="bg-slate-50 dark:bg-slate-900 py-24 sm:py-32 fade-in-section">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="mx-auto max-w-2xl lg:text-center">
+                    <h2 class="text-base font-semibold leading-7 text-sky-600 dark:text-sky-400">Instant. Accurate. Private.</h2>
+                    <p class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">The Health Assistant That's Always With You</p>
+                    <p class="mt-6 text-lg leading-8 text-slate-600 dark:text-slate-300">We use modern technology to help you on your health journey.</p>
+                </div>
+                <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
+                     <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
+                        <div class="relative pl-16">
+                            <dt class="text-base font-semibold leading-7 text-slate-900 dark:text-white">
+                                <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18a6 6 0 006-6c0-1.657-1.343-3-3-3s-3 1.343-3 3a6 6 0 00-6 6" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </div>
+                                Symptom Checker
+                            </dt>
+                            <dd class="mt-2 text-base leading-7 text-slate-600 dark:text-slate-300">Describe your symptoms and get information about possible conditions from the AI.</dd>
+                        </div>
+                        <div class="relative pl-16">
+                            <dt class="text-base font-semibold leading-7 text-slate-900 dark:text-white">
+                                <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500">
+                                     <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                </div>
+                                Image Analysis
+                            </dt>
+                            <dd class="mt-2 text-base leading-7 text-slate-600 dark:text-slate-300">Upload medical reports, X-rays, or a photo of a skin condition for an AI-powered analysis.</dd>
+                        </div>
+                         <div class="relative pl-16">
+                            <dt class="text-base font-semibold leading-7 text-slate-900 dark:text-white">
+                                <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500">
+                                   <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                </div>
+                                Instant Answers
+                            </dt>
+                            <dd class="mt-2 text-base leading-7 text-slate-600 dark:text-slate-300">Get immediate answers to your questions about medications, diseases, or any health-related topic.</dd>
+                        </div>
+                         <div class="relative pl-16">
+                            <dt class="text-base font-semibold leading-7 text-slate-900 dark:text-white">
+                                <div class="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-sky-500">
+                                    <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+                                </div>
+                                Secure & Private
+                            </dt>
+                            <dd class="mt-2 text-base leading-7 text-slate-600 dark:text-slate-300">All your conversations and data are end-to-end encrypted and completely private.</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </section>
+
+         <!-- Testimonials Section -->
+        <section class="bg-white dark:bg-slate-900/50 py-24 sm:py-32 fade-in-section">
+            <div class="mx-auto max-w-7xl px-6 lg:px-8">
+                <div class="mx-auto max-w-xl text-center">
+                    <h2 class="text-lg font-semibold leading-8 tracking-tight text-sky-600 dark:text-sky-400">Testimonials</h2>
+                    <p class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Thousands of users trust us</p>
+                </div>
+                <div class="mx-auto mt-16 flow-root max-w-2xl sm:mt-20 lg:mx-0 lg:max-w-none">
+                    <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                        <div class="break-inside-avoid rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-6">
+                            <div class="flex items-center gap-x-4">
+                                <img class="h-10 w-10 rounded-full bg-slate-50" src="https://placehold.co/40x40/E2E8F0/475569?text=AR" alt="">
+                                <div>
+                                    <div class="font-semibold text-slate-900 dark:text-white">Aarav Sharma</div>
+                                    <div class="text-slate-600 dark:text-slate-400">@aaravsharma</div>
+                                </div>
+                            </div>
+                            <blockquote class="mt-4 text-slate-700 dark:text-slate-300">"This assistant greatly helped me understand my medical reports. I was very confused before."</blockquote>
+                        </div>
+                         <div class="break-inside-avoid rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-6">
+                            <div class="flex items-center gap-x-4">
+                                <img class="h-10 w-10 rounded-full bg-slate-50" src="https://placehold.co/40x40/E2E8F0/475569?text=SP" alt="">
+                                <div>
+                                    <div class="font-semibold text-slate-900 dark:text-white">Sunita Patel</div>
+                                    <div class="text-slate-600 dark:text-slate-400">@sunitap</div>
+                                </div>
+                            </div>
+                            <blockquote class="mt-4 text-slate-700 dark:text-slate-300">"I needed health info for my child late at night and got an instant answer. Very helpful."</blockquote>
+                        </div>
+                         <div class="break-inside-avoid rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-6">
+                            <div class="flex items-center gap-x-4">
+                                <img class="h-10 w-10 rounded-full bg-slate-50" src="https://placehold.co/40x40/E2E8F0/475569?text=RK" alt="">
+                                <div>
+                                    <div class="font-semibold text-slate-900 dark:text-white">Ravi Kumar</div>
+                                    <div class="text-slate-600 dark:text-slate-400">@ravikumar</div>
+                                </div>
+                            </div>
+                            <blockquote class="mt-4 text-slate-700 dark:text-slate-300">"Very user-friendly and simple. It explains complex medical terms in easy language."</blockquote>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <div class="bg-slate-50 dark:bg-slate-900 fade-in-section">
+            <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:flex lg:items-center lg:justify-between lg:px-8">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Reliable health information<br>is now at your fingertips.</h2>
+                <div class="mt-10 flex items-center gap-x-6 lg:mt-0 lg:flex-shrink-0">
+                     <button id="launch-app-btn-cta" class="rounded-md bg-sky-500 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 transition-all">Get Started Now</button>
+                    <a href="#features" class="text-sm font-semibold leading-6 text-slate-900 dark:text-white">Learn More <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white dark:bg-slate-900/50">
+            <div class="mx-auto max-w-7xl overflow-hidden px-6 py-12 lg:px-8">
+                 <div class="mt-8 flex justify-center space-x-6">
+                    <a href="#" class="text-sm leading-6 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">About</a>
+                    <a href="#" class="text-sm leading-6 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Features</a>
+                    <a href="#" class="text-sm leading-6 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Privacy Policy</a>
+                    <a href="#" class="text-sm leading-6 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">Terms of Service</a>
+                </div>
+                 <p class="mt-8 text-center text-xs leading-5 text-slate-500 dark:text-slate-400">&copy; 2025 Dr. Kaif. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Chat Application -->
+    <div id="chat-app" class="hidden">
+       <div class="w-full h-screen flex bg-white dark:bg-slate-900">
+            <!-- Sidebar -->
+            <aside id="chat-sidebar" class="w-64 bg-slate-100 dark:bg-slate-800 flex-shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-700 transition-all duration-300 ease-in-out">
+                <div class="p-2 flex-shrink-0">
+                    <button id="back-to-home-btn" class="sidebar-button w-full flex items-center gap-2 p-2 mb-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Go back to landing page">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                        <span class="font-semibold sidebar-text">Home</span>
+                    </button>
+                    <button id="new-chat-btn" class="sidebar-button w-full flex items-center justify-center gap-2 p-2 rounded-lg bg-sky-500 text-white font-semibold hover:bg-sky-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span class="sidebar-text">New Chat</span>
+                    </button>
+                </div>
+                <div id="chat-history-list" class="flex-1 overflow-y-auto space-y-1 px-2">
+                    <!-- Chat history items will be added here -->
+                </div>
+                <div class="border-t border-slate-200 dark:border-slate-700 p-2">
+                     <button id="theme-toggle-btn" class="sidebar-button w-full flex items-center gap-3 p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                         <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                         <svg id="theme-icon-dark" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                         <span id="theme-text" class="sidebar-text">Light Mode</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Chat Area -->
+            <main class="flex-1 flex flex-col h-screen min-w-0"> <!-- Added min-w-0 for flex-shrink -->
+                <header class="flex-shrink-0 flex items-center p-2 border-b border-slate-200 dark:border-slate-700">
+                    <button id="sidebar-toggle-btn" class="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Toggle sidebar">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    </button>
+                </header>
+                <main id="chat-container" class="flex-1 p-6 overflow-y-auto bg-white dark:bg-slate-900">
+                    <!-- Welcome Screen or Messages will be added here -->
+                </main>
+
+                <div class="w-full max-w-3xl mx-auto">
+                    <!-- Image Preview -->
+                    <div id="image-preview-container" class="px-6 py-2 bg-white dark:bg-slate-900 hidden">
+                        <div class="relative inline-block">
+                            <img id="preview-image" src="" alt="Image preview" class="h-20 w-20 object-cover rounded-md">
+                            <button id="remove-image-btn" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full h-6 w-6 flex items-center justify-center text-sm font-bold">&times;</button>
+                        </div>
+                    </div>
+                    <!-- Input Area -->
+                    <footer class="p-4 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md">
+                         <div class="p-2 bg-amber-100 dark:bg-amber-900/50 border border-amber-200 dark:border-amber-900 text-center rounded-lg mb-4">
+                            <p class="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                                <strong>Disclaimer:</strong> This is an AI assistant, not a real doctor. Please consult a professional for medical advice.
+                            </p>
+                        </div>
+                        <div class="relative">
+                            <textarea id="message-input" placeholder="Ask your question or upload a report..." class="w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl p-3 pl-12 pr-20 focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none text-slate-700 dark:text-slate-200" rows="1"></textarea>
+                            <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center">
+                                <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+                                <button id="image-upload-btn" class="p-2 text-slate-500 dark:text-slate-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                </button>
+                            </div>
+                            <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                <button id="send-btn" class="bg-sky-500 text-white p-2 rounded-lg hover:bg-sky-600 transition-colors shadow disabled:bg-slate-400 disabled:cursor-not-allowed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            </main>
+       </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-xl p-6 max-w-sm w-full transform transition-all scale-95 opacity-0">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Start a New Chat?</h3>
+            <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">Your current chat will be saved. Do you want to proceed?</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancel-new-chat-btn" class="px-4 py-2 text-sm font-medium bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600">Cancel</button>
+                <button id="confirm-new-chat-btn" class="px-4 py-2 text-sm font-medium text-white bg-sky-500 rounded-md hover:bg-sky-600">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- DOM Elements ---
+        const landingPage = document.getElementById('landing-page');
+        const chatApp = document.getElementById('chat-app');
+        const launchAppBtnNav = document.getElementById('launch-app-btn-nav');
+        const launchAppBtnHero = document.getElementById('launch-app-btn-hero');
+        const launchAppBtnCta = document.getElementById('launch-app-btn-cta');
+        const bodyEl = document.querySelector('body');
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const imageUploadBtn = document.getElementById('image-upload-btn');
+        const imageUploadInput = document.getElementById('image-upload-input');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const previewImage = document.getElementById('preview-image');
+        const removeImageBtn = document.getElementById('remove-image-btn');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const chatHistoryList = document.getElementById('chat-history-list');
+        const themeToggleBtn = document.getElementById('theme-toggle-btn');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        const themeText = document.getElementById('theme-text');
+        const backToHomeBtn = document.getElementById('back-to-home-btn');
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+        const chatSidebar = document.getElementById('chat-sidebar');
+        // New modal elements
+        const confirmationModal = document.getElementById('confirmation-modal');
+        const confirmNewChatBtn = document.getElementById('confirm-new-chat-btn');
+        const cancelNewChatBtn = document.getElementById('cancel-new-chat-btn');
+
+        // --- State Management ---
+        let uploadedImageBase64 = null;
+        let uploadedFileObject = null;
+        let isLoading = false;
+        let chatHistory = [];
+        let currentChatId = null;
+
+        // --- Event Listeners ---
+        window.addEventListener('load', initializeApp);
+        launchAppBtnNav.addEventListener('click', showChatApp);
+        launchAppBtnHero.addEventListener('click', showChatApp);
+        launchAppBtnCta.addEventListener('click', showChatApp);
+        sendBtn.addEventListener('click', handleSendMessage);
+        newChatBtn.addEventListener('click', () => showConfirmationModal());
+        themeToggleBtn.addEventListener('click', toggleTheme);
+        backToHomeBtn.addEventListener('click', showLandingPage);
+        sidebarToggleBtn.addEventListener('click', toggleSidebar);
+        // New modal listeners
+        confirmNewChatBtn.addEventListener('click', () => {
+            hideConfirmationModal();
+            startNewChat();
+        });
+        cancelNewChatBtn.addEventListener('click', hideConfirmationModal);
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage();
+            }
+        });
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = (messageInput.scrollHeight) + 'px';
+        });
+        imageUploadBtn.addEventListener('click', () => imageUploadInput.click());
+        imageUploadInput.addEventListener('change', handleImageUpload);
+        removeImageBtn.addEventListener('click', removeImage);
+        
+        // --- Initialization ---
+        function initializeApp() {
+            applyCurrentTheme();
+            setupScrollAnimations();
+            loadChatHistory();
+            renderChatHistorySidebar();
+            if (chatHistory.length > 0) {
+                loadChat(chatHistory[0].id);
+            } else {
+                startNewChat(false); // No animation on first load
+            }
+        }
+
+        // --- Page/UI Logic ---
+        function showChatApp() {
+            landingPage.classList.add('fade-out');
+            setTimeout(() => {
+                landingPage.classList.add('hidden');
+                landingPage.classList.remove('fade-out');
+
+                chatApp.classList.remove('hidden');
+                chatApp.classList.add('fade-in');
+                 setTimeout(() => {
+                    chatApp.classList.remove('fade-in');
+                }, 300);
+            }, 300);
+        }
+        
+        function showLandingPage() {
+            chatApp.classList.add('fade-out');
+            setTimeout(() => {
+                chatApp.classList.add('hidden');
+                chatApp.classList.remove('fade-out');
+                
+                landingPage.classList.remove('hidden');
+                landingPage.classList.add('fade-in');
+                setTimeout(() => {
+                    landingPage.classList.remove('fade-in');
+                }, 300);
+            }, 300);
+        }
+
+        function toggleSidebar() {
+            chatSidebar.classList.toggle('is-collapsed');
+        }
+
+        // New Modal Functions
+        function showConfirmationModal() {
+            bodyEl.classList.add('overflow-hidden'); // Lock scroll
+            confirmationModal.classList.remove('hidden');
+            setTimeout(() => {
+                confirmationModal.querySelector('div').classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+        function hideConfirmationModal() {
+            bodyEl.classList.remove('overflow-hidden'); // Unlock scroll
+            const modalContent = confirmationModal.querySelector('div');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                confirmationModal.classList.add('hidden');
+            }, 200);
+        }
+
+        function toggleLoading(state) {
+            isLoading = state;
+            sendBtn.disabled = isLoading;
+            messageInput.disabled = isLoading;
+            if (isLoading) {
+                sendBtn.classList.add('animate-pulse');
+            } else {
+                sendBtn.classList.remove('animate-pulse');
+            }
+        }
+
+        function renderWelcomeScreen() {
+            chatContainer.innerHTML = `
+                <div id="welcome-screen" class="flex flex-col items-center justify-center h-full text-center">
+                    <div class="w-24 h-24 mx-auto mb-6">
+                        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M100 180C144.183 180 180 144.183 180 100C180 55.8172 144.183 20 100 20C55.8172 20 20 55.8172 20 100C20 130.932 38.6481 157.925 65 170.833" stroke="#0ea5e9" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M130 115V95C130 75.67 114.33 60 95 60C75.67 60 60 75.67 60 95V120C60 128.284 66.7157 135 75 135H80" stroke="#0ea5e9" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="130" cy="130" r="15" fill="#0ea5e9"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 dark:text-white">Dr. Kaif</h2>
+                    <p class="mt-2 text-slate-600 dark:text-slate-400">How can I help you today?</p>
+                    <div class="grid md:grid-cols-2 gap-3 mt-8 w-full max-w-lg">
+                        <button class="example-prompt text-left p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <p class="font-semibold text-sm text-slate-700 dark:text-slate-200">Home remedies</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">for a common cold</p>
+                        </button>
+                        <button class="example-prompt text-left p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                             <p class="font-semibold text-sm text-slate-700 dark:text-slate-200">Explain a report</p>
+                             <p class="text-xs text-slate-500 dark:text-slate-400">about a blood test</p>
+                        </button>
+                        <button class="example-prompt text-left p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                             <p class="font-semibold text-sm text-slate-700 dark:text-slate-200">Describe symptoms</p>
+                             <p class="text-xs text-slate-500 dark:text-slate-400">of high blood pressure</p>
+                        </button>
+                        <button class="example-prompt text-left p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                            <p class="font-semibold text-sm text-slate-700 dark:text-slate-200">Analyze an image</p>
+                             <p class="text-xs text-slate-500 dark:text-slate-400">of a skin rash</p>
+                        </button>
+                    </div>
+                </div>`;
+
+            document.querySelectorAll('.example-prompt').forEach(button => {
+                button.addEventListener('click', () => {
+                    const mainText = button.querySelector('p:nth-child(1)').textContent;
+                    const subText = button.querySelector('p:nth-child(2)').textContent;
+                    const fullPrompt = `${mainText} ${subText}`;
+                    messageInput.value = fullPrompt;
+                    handleSendMessage();
+                });
+            });
+        }
+        
+        // --- Landing Page Animations ---
+        function setupScrollAnimations() {
+            const sections = document.querySelectorAll('.fade-in-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        }
+        
+        // --- Image Handling ---
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                uploadedImageBase64 = reader.result;
+                previewImage.src = reader.result;
+                imagePreviewContainer.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+            uploadedFileObject = file;
+        }
+
+        function removeImage() {
+            uploadedImageBase64 = null;
+            uploadedFileObject = null;
+            imageUploadInput.value = '';
+            imagePreviewContainer.classList.add('hidden');
+        }
+        
+        // --- Chat Logic ---
+        async function handleSendMessage() {
+            const message = messageInput.value.trim();
+            if (!message && !uploadedFileObject) return;
+            if (isLoading) return;
+
+            if (currentChatId === null) {
+                const chatTitle = message || "Image Analysis";
+                createNewChat(chatTitle);
+            }
+            
+            const userMessage = { sender: 'user', message, imageUrl: uploadedImageBase64 };
+            addMessageToHistory(userMessage);
+            addMessageToChatDOM(userMessage);
+            
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            const fileToSend = uploadedFileObject;
+            removeImage();
+            
+            toggleLoading(true);
+            addTypingIndicatorToDOM();
+
+            try {
+                const aiResponseText = await callWebhookAPI(message, fileToSend);
+                const aiMessage = { sender: 'ai', message: aiResponseText, imageUrl: null };
+                removeTypingIndicatorFromDOM();
+                
+                const textElement = addMessageToChatDOM({ sender: 'ai', message: '', imageUrl: null });
+                await typeWriterAnimation(textElement, aiResponseText);
+
+                addMessageToHistory(aiMessage);
+
+            } catch (error) {
+                console.error("API Error:", error);
+                const errorMessage = { sender: 'ai', message: 'Sorry, something went wrong while sending data to the webhook. Please try again later.', imageUrl: null };
+                removeTypingIndicatorFromDOM();
+                addMessageToHistory(errorMessage);
+                addMessageToChatDOM(errorMessage);
+            } finally {
+                toggleLoading(false);
+                saveChatHistory();
+            }
+        }
+        
+        function addTypingIndicatorToDOM() {
+            const typingEl = document.createElement('div');
+            typingEl.id = 'typing-indicator';
+            typingEl.classList.add('message', 'ai-message', 'mb-4', 'flex', 'items-end');
+            typingEl.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                    <div class="bg-slate-200 dark:bg-slate-700 rounded-lg p-3 max-w-xs md:max-w-md">
+                        <div class="flex items-center justify-center space-x-1">
+                            <div class="typing-dot h-2 w-2 bg-slate-500 dark:bg-slate-400 rounded-full"></div>
+                            <div class="typing-dot h-2 w-2 bg-slate-500 dark:bg-slate-400 rounded-full"></div>
+                            <div class="typing-dot h-2 w-2 bg-slate-500 dark:bg-slate-400 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>`;
+            chatContainer.appendChild(typingEl);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function removeTypingIndicatorFromDOM() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function addMessageToChatDOM({ sender, message, imageUrl }) {
+            const messageEl = document.createElement('div');
+            messageEl.classList.add('message', 'mb-6', 'flex');
+
+            const isUser = sender === 'user';
+            
+            const iconHtml = isUser ? `
+                <div class="flex-shrink-0 w-8 h-8 bg-slate-700 dark:bg-slate-600 rounded-full flex items-center justify-center">
+                    <svg class="text-white" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>` : `
+                <div class="flex-shrink-0 w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                </div>`;
+            
+            const formattedMessage = (message || '')
+                .toString()
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\n/g, '<br>');
+
+            const messageContentHtml = `
+                <div class="p-3 rounded-lg max-w-xs md:max-w-md ${isUser ? 'bg-sky-100 dark:bg-sky-900/50 text-sky-900 dark:text-sky-200' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}">
+                    ${imageUrl ? `<img src="${imageUrl}" class="rounded-md mb-2 max-h-48 w-auto">` : ''}
+                    <div class="text-sm break-words message-text-container">${formattedMessage}</div>
+                </div>`;
+
+            if (isUser) {
+                messageEl.classList.add('justify-end');
+                messageEl.innerHTML = `
+                    <div class="order-2">${messageContentHtml}</div>
+                    <div class="order-1 mr-3">${iconHtml}</div>`;
+            } else {
+                messageEl.classList.add('justify-start', 'items-start');
+                 messageEl.innerHTML = `
+                    <div class="mr-3">${iconHtml}</div>
+                    <div>${messageContentHtml}</div>`;
+            }
+
+            chatContainer.appendChild(messageEl);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            if (sender === 'ai' && message === '') {
+                return messageEl.querySelector('.message-text-container');
+            }
+        }
+
+        function typeWriterAnimation(element, text) {
+            return new Promise((resolve) => {
+                const formattedText = text.toString()
+                                          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                                          .replace(/\n/g, '<br>');
+                let i = 0;
+                let isTag = false;
+                const typingSpeed = 25;
+
+                function type() {
+                    if (i < formattedText.length) {
+                        let char = formattedText.charAt(i);
+                        
+                        if (char === '<') isTag = true;
+                        
+                        if (isTag) {
+                            let tag = '';
+                            while(i < formattedText.length) {
+                                char = formattedText.charAt(i);
+                                tag += char;
+                                i++;
+                                if (char === '>') {
+                                    isTag = false;
+                                    break;
+                                }
+                            }
+                            element.innerHTML += tag;
+                        } else {
+                            element.innerHTML += char;
+                            i++;
+                        }
+
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                        setTimeout(type, typingSpeed);
+                    } else {
+                        resolve();
+                    }
+                }
+                type();
+            });
+        }
+
+        // --- Chat History Management ---
+        function saveChatHistory() {
+            localStorage.setItem('aiHealthChatHistory', JSON.stringify(chatHistory));
+        }
+
+        function loadChatHistory() {
+            const history = localStorage.getItem('aiHealthChatHistory');
+            chatHistory = history ? JSON.parse(history) : [];
+        }
+
+        function renderChatHistorySidebar() {
+            chatHistoryList.innerHTML = '';
+            chatHistory.forEach(chat => {
+                const chatEl = document.createElement('button');
+                chatEl.classList.add('w-full', 'text-left', 'p-2', 'rounded-lg', 'truncate', 'text-sm', 'transition-colors');
+                if (chat.id === currentChatId) {
+                     chatEl.classList.add('bg-sky-200', 'dark:bg-sky-800', 'text-sky-800', 'dark:text-sky-200', 'font-semibold');
+                } else {
+                     chatEl.classList.add('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-200', 'dark:hover:bg-slate-700');
+                }
+                chatEl.innerHTML = `<span class="sidebar-text">${chat.title}</span>`;
+                chatEl.dataset.chatId = chat.id;
+                chatEl.addEventListener('click', () => loadChat(chat.id));
+                chatHistoryList.appendChild(chatEl);
+            });
+        }
+        
+        function startNewChat(animate = true) {
+             if (animate) {
+                chatContainer.classList.add('fade-out');
+                setTimeout(() => {
+                    currentChatId = null;
+                    renderWelcomeScreen();
+                    renderChatHistorySidebar();
+                    chatContainer.classList.remove('fade-out');
+                    chatContainer.classList.add('fade-in');
+                    setTimeout(() => chatContainer.classList.remove('fade-in'), 300);
+                }, 200);
+            } else {
+                currentChatId = null;
+                renderWelcomeScreen();
+                renderChatHistorySidebar();
+            }
+        }
+
+        function createNewChat(firstMessage) {
+            const newChat = {
+                id: `chat-${Date.now()}`,
+                title: firstMessage.substring(0, 30) + (firstMessage.length > 30 ? '...' : ''),
+                messages: [],
+            };
+            chatHistory.unshift(newChat);
+            currentChatId = newChat.id;
+            renderChatHistorySidebar();
+        }
+
+        function addMessageToHistory(message) {
+            const chat = chatHistory.find(c => c.id === currentChatId);
+            if(chat) {
+                chat.messages.push(message);
+            }
+        }
+
+        function loadChat(chatId) {
+            if (chatId === currentChatId) return;
+            currentChatId = chatId;
+            const chat = chatHistory.find(c => c.id === chatId);
+            
+            chatContainer.classList.add('fade-out');
+            setTimeout(() => {
+                chatContainer.innerHTML = '';
+                if (chat) {
+                    chat.messages.forEach(msg => addMessageToChatDOM(msg));
+                }
+                setTimeout(() => {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }, 0);
+                renderChatHistorySidebar();
+                 chatContainer.classList.remove('fade-out');
+                 chatContainer.classList.add('fade-in');
+                 setTimeout(() => chatContainer.classList.remove('fade-in'), 300);
+            }, 200);
+        }
+
+        // --- Theme Management ---
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const isNowDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
+            updateThemeButtonUI(isNowDark);
+        }
+
+        function applyCurrentTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const useDarkMode = savedTheme === 'dark' || (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (useDarkMode) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeButtonUI(useDarkMode);
+        }
+
+        function updateThemeButtonUI(isDark) {
+             if (isDark) {
+                themeIconLight.classList.add('hidden');
+                themeIconDark.classList.remove('hidden');
+                themeText.textContent = 'Dark Mode';
+            } else {
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+                themeText.textContent = 'Light Mode';
+            }
+        }
+        
+        // --- API Call ---
+        async function callWebhookAPI(prompt, imageFile) {
+            const apiUrl = "https://project9954.app.n8n.cloud/webhook/5949b05d-9ae4-4921-beda-c8a506febc28";
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+            if (imageFile) {
+                formData.append('image', imageFile, imageFile.name);
+            }
+            const TIMEOUT_DURATION = 300000;
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_DURATION);
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', body: formData, signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    const responseText = await response.text();
+                    try {
+                        const result = JSON.parse(responseText);
+                        return result.output || result.text || result.reply || result.message || JSON.stringify(result, null, 2);
+                    } catch (jsonError) {
+                        return responseText;
+                    }
+                } else {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error(`API call failed:`, error);
+                if (error.name === 'AbortError') throw new Error(`Webhook did not respond in ${TIMEOUT_DURATION / 1000} seconds.`);
+                throw error;
+            }
+        }
+    </script>
+</body>
+</html>
+
